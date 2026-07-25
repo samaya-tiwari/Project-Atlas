@@ -34,9 +34,11 @@ class DatasetLoader:
         return ind_list.to_list()
         
     
-    
     def get_memory_usage(self):
-        pass
+        """Return the total memory usage of the dataset."""
+        return self.dataset.memory_usage(index=True, deep=True).sum()
+
+
     def detect_file_type(self):
         pass
     def validate_file(self):
