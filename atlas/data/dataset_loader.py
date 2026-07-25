@@ -28,9 +28,13 @@ class DatasetLoader:
         return self.dataset.shape     # returns the shape of the data
     
     
-    
     def get_column_names(self):
-        pass
+        """Return the dataset column names in a list."""
+        ind_list = self.dataset.columns
+        return ind_list.to_list()
+        
+    
+    
     def get_memory_usage(self):
         pass
     def detect_file_type(self):
