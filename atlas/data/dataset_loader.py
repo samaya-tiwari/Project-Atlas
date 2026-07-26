@@ -1,24 +1,35 @@
 # Dataset Loader
 
 import pandas as pd
+from pathlib import Path
 
 class DatasetLoader:
     """Loads datasets and provides basic info for Project Atlas."""
     
 
-    """Initialize an empty DatasetLoader."""
+ 
     def __init__(self):
+        """Initialize an empty DatasetLoader."""
         self.dataset = None
         self.filename = None
         
 
     def load(self, filename: str):
 
-        '''Load a CSV dataset.'''
+        '''Load a supported dataset into memory.'''
 
         # saves the filename to self.filename
-        self.filename = filename
-        self.dataset = pd.read_csv(filename)
+        self.filename = Path(filename)
+        extension = self.detect_file_type()
+
+        if extension == ".csv":
+            self.dataset = pd.read_csv(self.filename)
+        elif extension == ".json":
+            self.dataset = pd.read_json(self.filename)
+        elif extension == ".xlsx":
+            self.dataset = pd.read_excel(self.filename)
+        else:
+            raise ValueError("Unspported file type")
 
         # returns self.dataset
         return self.dataset
@@ -40,7 +51,11 @@ class DatasetLoader:
 
 
     def detect_file_type(self):
-        pass
+        """Return the file extension of the loaded dataset."""
+        return self.filename.suffix.lower()
+
+
+        
     def validate_file(self):
         pass
     def get_summary(self):
