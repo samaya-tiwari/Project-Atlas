@@ -34,7 +34,7 @@ class EDAEngine:
         count = len(row_indices)
 
         total_rows = len(self.dataset)
-        percentage = float((total_rows/row_indices) * 100)
+        percentage = round((total_rows/row_indices) * 100)
 
         return {
             "count" : count,
@@ -43,8 +43,37 @@ class EDAEngine:
         }
 
 
-    def get_data_types(self, dataset):
-        pass
+    def get_data_types(self):
+
+        TYPE_MAPPING = {
+            "int64": "integer",
+            "int32": "integer",
+            "float64": "float",
+            "float32": "float",
+            "bool": "boolean",
+            "datetime64[ns]": "datetime",
+            "timedelta64[ns]": "timedelta",
+            "object": "text",
+            "category": "categorical" 
+        }
+
+        if self.dataset is None or self.dataset.empty:
+            return {}
+
+        data_types = {}
+
+        for column in self.dataset.columns:
+            dtype_str = str(self.dataset[column].dtype)
+            semantic_type = TYPE_MAPPING.get(dtype_str, "Unknown / Mixed")
+
+            data_types[column] = {
+                "dtype": dtype_str,
+                "semantic_type": semantic_type
+            }
+
+        return data_types
+
+        
     def get_unique_values(self, dataset):
         pass
     def get_numerical_summary(self, dataset):
