@@ -97,5 +97,3 @@ class DatasetLoader:
             "columns" : self.get_column_names(),
             "memory_usage_bytes" : int(self.get_memory_usage()),
         }
-
-
