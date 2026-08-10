@@ -74,8 +74,21 @@ class EDAEngine:
         return data_types
 
         
-    def get_unique_values(self, dataset):
-        pass
+    def get_unique_values(self):
+
+        if self.dataset is None or self.dataset.empty:
+            return {}
+
+        unique_vals = {}
+
+        for column in self.dataset.columns:
+            count = self.dataset[column].nunique(dropna=False)
+
+            unique_vals[column] = {
+                    "unique_count": int(count)
+                }
+        return unique_vals
+    
     def get_numerical_summary(self, dataset):
         pass
     def get_categorical_summary(self, dataset):
