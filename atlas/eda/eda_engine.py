@@ -82,15 +82,55 @@ class EDAEngine:
         unique_vals = {}
 
         for column in self.dataset.columns:
-            count = self.dataset[column].nunique(dropna=False)
+            count = self.dataset[column].nunique()
 
             unique_vals[column] = {
                     "unique_count": int(count)
                 }
         return unique_vals
     
-    def get_numerical_summary(self, dataset):
-        pass
+    def get_numerical_summary(self):
+
+        if self.dataset is None or self.dataset.empty:
+            return {}
+
+        numerical_summary = {}
+
+        numeric_data = self.dataset.select_dtypes(include='number')
+        if numeric_data.empty:
+            return {}
+        descr_col = numeric_data.describe()
+
+        for column in numeric_data.columns:
+            count = descr_col.loc["count", column]
+            mean = descr_col.loc["mean", column]
+            min = descr_col.loc["min", column]
+            std = descr_col.loc["std", column]
+            q1 = descr_col.loc["25%", column]
+            median = descr_col.loc["50%", column]
+            q3 = descr_col.loc["75%", column]
+            max = descr_col.loc["max", column]
+
+            variance = numeric_data[column].var()
+            skewness = numeric_data[column].skew()
+            kurtosis = numeric_data[column].kurt()
+            iqr = descr_col.loc["75%", column] - descr_col.loc["25%", column]
+        
+            return numerical_summary[column] = {
+                "count": int(count),
+                "mean": float(mean),
+                "min": float(min),
+                "std": float(std),
+                "25%": float(q1),
+                "median": float(median),
+                "75%": float(q3),
+                "max": float(max),
+                "variance": float(variance),
+                "skewness": float(skewness),
+                "kurtosis": float(kurtosis),
+                "iqr": int(iqr),
+            }
+       
     def get_categorical_summary(self, dataset):
         pass
     def get_correlation_matrix(self, dataset):
