@@ -99,40 +99,57 @@ class EDAEngine:
         numeric_data = self.dataset.select_dtypes(include='number')
         if numeric_data.empty:
             return {}
-        descr_col = numeric_data.describe()
+        describe_stats = numeric_data.describe()
 
         for column in numeric_data.columns:
-            count = descr_col.loc["count", column]
-            mean = descr_col.loc["mean", column]
-            min = descr_col.loc["min", column]
-            std = descr_col.loc["std", column]
-            q1 = descr_col.loc["25%", column]
-            median = descr_col.loc["50%", column]
-            q3 = descr_col.loc["75%", column]
-            max = descr_col.loc["max", column]
+            count = describe_stats.loc["count", column]
+            mean = describe_stats.loc["mean", column]
+            minimum = describe_stats.loc["min", column]
+            std = describe_stats.loc["std", column]
+            q1 = describe_stats.loc["25%", column]
+            median = describe_stats.loc["50%", column]
+            q3 = describe_stats.loc["75%", column]
+            maximum = describe_stats.loc["max", column]
 
             variance = numeric_data[column].var()
             skewness = numeric_data[column].skew()
             kurtosis = numeric_data[column].kurt()
-            iqr = descr_col.loc["75%", column] - descr_col.loc["25%", column]
+            iqr = describe_stats.loc["75%", column] - describe_stats.loc["25%", column]
         
-            return numerical_summary[column] = {
+            numerical_summary[column] =  {
                 "count": int(count),
                 "mean": float(mean),
-                "min": float(min),
+                "min": float(minimum),
                 "std": float(std),
                 "25%": float(q1),
                 "median": float(median),
                 "75%": float(q3),
-                "max": float(max),
+                "max": float(maximum),
                 "variance": float(variance),
                 "skewness": float(skewness),
                 "kurtosis": float(kurtosis),
-                "iqr": int(iqr),
+                "iqr": float(iqr),
             }
+
+        return numerical_summary
        
-    def get_categorical_summary(self, dataset):
-        pass
+    def get_categorical_summary(self):
+        categorical_cols = self.dataset.select_dtypes(include= ["object", "category", "bool"]).columns.tolist()
+
+        if not categorical_cols:
+            categorical_dict = {}
+        else:
+            categorical_dict = {
+                col: {
+                    "count": int(self.dataset[col].count()),
+                    "unique_count":int(self.dataset[col].nunique()),
+                    "most_frequent": self.dataset[col].mode().iloc[0] if not self.dataset[col].mode().empty else None,
+                    "frequency" : int(self.dataset[col].value_counts().iloc[0]) if not self.dataset[col].value_counts().empty else 0,
+                    "missing_count": int(self.dataset[col].isna().sum())
+                }
+                for col in categorical_cols
+            }
+            return categorical_dict
     def get_correlation_matrix(self, dataset):
         pass
     def get_dimensionality(self, dataset):
