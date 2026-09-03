@@ -1,4 +1,8 @@
-name,age,grade
-Sam,20,90
+name,age,grade,hours_studied
+Sam,20,85,5
+Alex,22,90,7
+John,19,78,3
+Emily,21,88,6
+Mike,23,95,9
 Alex,21,85
 Jordan,19,92

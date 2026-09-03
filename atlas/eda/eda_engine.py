@@ -137,21 +137,41 @@ class EDAEngine:
         categorical_cols = self.dataset.select_dtypes(include= ["object", "category", "bool"]).columns.tolist()
 
         if not categorical_cols:
-            categorical_dict = {}
-        else:
-            categorical_dict = {
-                col: {
-                    "count": int(self.dataset[col].count()),
-                    "unique_count":int(self.dataset[col].nunique()),
-                    "most_frequent": self.dataset[col].mode().iloc[0] if not self.dataset[col].mode().empty else None,
-                    "frequency" : int(self.dataset[col].value_counts().iloc[0]) if not self.dataset[col].value_counts().empty else 0,
-                    "missing_count": int(self.dataset[col].isna().sum())
-                }
-                for col in categorical_cols
+            return {}
+
+        categorical_dict = {}
+
+        for col in categorical_cols:
+            mode = self.dataset[col].mode()
+            value_counts = self.dataset[col].value_counts()
+
+            categorical_dict[col] = {
+                "count": int(self.dataset[col].count()),
+                "unique_count": int(self.dataset[col].nunique()),
+                "most_frequent": mode.iloc[0] if not mode.empty else None,
+                "frequency": int(value_counts.iloc[0]) if not value_counts.empty else 0,
+                "missing_count": int(self.dataset[col].isna().sum())
             }
-            return categorical_dict
-    def get_correlation_matrix(self, dataset):
-        pass
+
+        return categorical_dict
+
+    
+    def get_correlation_matrix(self):
+        # checks whether the dataset is empty or missing
+        if self.dataset is None or self.dataset.empty:
+            return {}
+        
+        # selecting only numerical columns because correlation cannot work on date/time etc
+        numerical_df = self.dataset.select_dtypes(include=["number"])
+
+        # no numerical features
+        if numerical_df.empty:
+            return {}
+
+        corr_matrix = numerical_df.corr(method='pearson')
+        return corr_matrix.to_dict()
+
+    
     def get_dimensionality(self, dataset):
         pass
     

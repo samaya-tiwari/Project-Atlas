@@ -1,9 +1,16 @@
 # test
 
 from atlas.data.dataset_loader import DatasetLoader
+from atlas.eda.eda_engine import EDAEngine
+
+print("Starting test...")
 
 loader = DatasetLoader()
-dataset= loader.load("datasets/sample.csv")
+loader.load("datasets/sample.csv")
 
-print(loader.validate_file())
-print(loader.get_summary())
+eda = EDAEngine(loader.dataset)
+
+result = eda.get_correlation_matrix()
+
+print("Correlation matrix:")
+print(result)
