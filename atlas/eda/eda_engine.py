@@ -34,7 +34,7 @@ class EDAEngine:
         count = len(row_indices)
 
         total_rows = len(self.dataset)
-        percentage = round((total_rows/row_indices) * 100)
+        percentage = round((count / total_rows) * 100, 2)
 
         return {
             "count" : count,
@@ -184,5 +184,18 @@ class EDAEngine:
         
         
     
-    def get_summary(self, dataset):
-        pass
+    def get_summary(self):
+        # check if the dataset is empty
+        if self.dataset is None or self.dataset.empty:
+            return {}
+
+        return {
+                "dimensionality": self.get_dimensionality(),
+                "missing_values": self.get_missing_values(),
+                "duplicate_rows": self.get_duplicate_rows(),
+                "data_types": self.get_data_types(),
+                "unique_values": self.get_unique_values(),
+                "numerical_summary": self.get_numerical_summary(),
+                "categorical_summary": self.get_categorical_summary(),
+                "correlation_matrix": self.get_correlation_matrix()
+        }

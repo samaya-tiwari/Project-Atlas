@@ -14,3 +14,6 @@ result = eda.get_dimensionality()
 
 print("Dimensionality: ")
 print(result)
+
+print("Summary: ")
+print(eda.get_summary())
