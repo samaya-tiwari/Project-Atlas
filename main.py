@@ -10,7 +10,7 @@ loader.load("datasets/sample.csv")
 
 eda = EDAEngine(loader.dataset)
 
-result = eda.get_correlation_matrix()
+result = eda.get_dimensionality()
 
-print("Correlation matrix:")
+print("Dimensionality: ")
 print(result)

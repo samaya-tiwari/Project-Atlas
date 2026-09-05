@@ -172,8 +172,17 @@ class EDAEngine:
         return corr_matrix.to_dict()
 
     
-    def get_dimensionality(self, dataset):
-        pass
+    def get_dimensionality(self):
+        # checking if the dataset is empty or missing
+        if self.dataset is None or self.dataset.empty:
+            return {}
+
+        return {
+            "rows" : self.dataset.shape[0],
+            "columns" : self.dataset.shape[1]
+        }
+        
+        
     
     def get_summary(self, dataset):
         pass
