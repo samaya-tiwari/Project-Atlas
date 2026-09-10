@@ -91,3 +91,16 @@ class Preprocessor:
             self.dataset[column] = self.dataset[column].fillna(fill_value)
 
         return self.dataset
+
+    def remove_duplicates(self):
+        """Removes the duplicates in the dataset while keeping the first element."""
+        if self.dataset is None or self.dataset.empty:
+            return {}
+
+        # counts duplicates before removal
+        duplicate_count = self.dataset.duplicated(keep="first").sum()
+
+        # remove duplicate rows keeping the first occurence
+        self.dataset = self.dataset.drop_duplicates(keep="first")
+
+        return self.dataset
