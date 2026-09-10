@@ -1,19 +1,27 @@
 # test
 
-from atlas.data.dataset_loader import DatasetLoader
-from atlas.eda.eda_engine import EDAEngine
+import pandas as pd
 
-print("Starting test...")
+from atlas.data.preprocessor import Preprocessor
 
-loader = DatasetLoader()
-loader.load("datasets/sample.csv")
+df = pd.DataFrame({
+    "age": [20, 22, None, 24, 26],
+    "salary": [50000, None, 60000, 55000, 65000],
+    "city": ["London", "Paris", None, "London", "Tokyo"],
+    "status": ["Active", None, "Active", "Inactive", "Active"],
+    "score": [10, 20, None, 30, 40]
+})
 
-eda = EDAEngine(loader.dataset)
+print("ORIGINAL DATA:")
+print(df)
 
-result = eda.get_dimensionality()
+# MEAN
+preprocessor = Preprocessor(df)
 
-print("Dimensionality: ")
+result = preprocessor.handle_missing_values(
+    {"salary" : "drop"},
+    max_drop_percentage=10
+)
+
+print("\nMEAN TEST:")
 print(result)
-
-print("Summary: ")
-print(eda.get_summary())
