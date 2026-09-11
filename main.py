@@ -1,18 +1,16 @@
 import pandas as pd
-
 from atlas.data.preprocessor import Preprocessor
 
 df = pd.DataFrame({
-    "name": ["Sam", "Alex", "Sam"],
-    "age": [20, 22, 20]
+    "name": ["Samaya", "Swastika", "Aaron", "Sri"],
+    "city": ["London", "Paris", "Tokyo", "London"]
 })
 
 preprocessor = Preprocessor(df)
 
-print("BEFORE:")
-print(preprocessor.dataset)
+result = preprocessor.encode_categorical({
+    "city" : "one_hot"
+})
 
-result = preprocessor.remove_duplicates()
-
-print("\nAFTER:")
 print(result)
+print(preprocessor.label_mapping)
