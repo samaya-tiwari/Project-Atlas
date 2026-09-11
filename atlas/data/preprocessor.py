@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 class Preprocessor:
     """Cleans and prepares datasets for analysis and machine learning."""
@@ -15,9 +16,14 @@ class Preprocessor:
         "label", "one_hot"
     }
 
+    NUMERICAL_SCALING_STRATEGIES = {
+        "standardize", "normalize"
+    }
+
     def __init__(self, dataset):
         self.dataset = dataset.copy()
         self.label_mapping = {}
+        self.scalers = {}
 
     def handle_missing_values(self, strategies, max_drop_percentage = 20, constant_values=None):
         # check whether the dataset is missing/empty
@@ -110,54 +116,53 @@ class Preprocessor:
 
         return self.dataset
 
-    def encode_categorical(self, strategies):
-        """Encodes columns using specified categorical encoding strategies."""
 
-        # base validatoin check for the dataset
+    def scale_numerical(self, strategies):
+
+        # check
         if self.dataset is None or self.dataset.empty:
-            raise ValueError("Dataset is empty or not initialized.")
+            return {}
 
         if not isinstance(strategies, dict):
-            raise TypeError(f"Strategies must be a dictionary.")
+            raise TypeError("strategies must be a dictionary.")
 
-        # validation loop
         for column, strategy in strategies.items():
 
+            # validate if the column exists
             if column not in self.dataset.columns:
-                raise ValueError (f"Column '{column}' does not exist in the dataset.")
+                raise ValueError(f"Column '{column}' does not exist in the dataset.")
 
-            # checking if the strategy is supported
-            if strategy not in self.CATEGORICAL_ENCODING_STRATEGIES:
-                raise ValueError(f"Unknown encoding strategy '{strategy}' for column '{column}'. "
-                                 f"Supported strategies are: {self.CATEGORICAL_ENCODING_STRATEGIES}"
-                                 )
+            # check if the strategy is supported
+            if strategy not in self.NUMERICAL_SCALING_STRATEGIES:
+                raise ValueError(f"The strategy '{strategy}' is not supported for column '{column}'."
+                                 f"Supported strategies are: standardize, normalize")
 
-            # verify the column is categorical
-            if pd.api.types.is_numeric_dtype(self.dataset[column]):
+            # checking if the column is numeric
+            if not pd.api.types.is_numeric_dtype(self.dataset[column]):
                 raise ValueError(
-                    f"Cannot apply categorical encoding to column '{column}'. "
-                    f"The column is numeric, but must be categorical."
+                    f"Cannot perform '{strategy}' strategy to column '{column}' because it is not numerical. "
+                    f"The given column data type is {self.dataset[column].dtype}."
                 )
 
-            # execution loop
-        for column, strategy in strategies.items():
-            if strategy == "label":
+            # scaling 
+            if strategy == 'standardize':
+                scaler = StandardScaler()
 
-                categories = self.dataset[column].astype("category").cat.categories
+                # save the scaled values
+                scaled_vals = scaler.fit_transform(
+                    self.dataset[[column]]           # scaler expects scaler input
+                )
 
-                mapping = {
-                    category : code
-                    for code, category in enumerate(categories)
-                }
+            elif strategy == 'normalize':
+                scaler = MinMaxScaler()
 
-                self.label_mapping[column] = mapping
-                self.dataset[column] = self.dataset[column].map(mapping)
+                # save the scaled values
+                scaled_vals = scaler.fit_transform(
+                    self.dataset[[column]]
+                )
 
-            elif strategy == "one_hot":
+            self.dataset[column] = scaled_vals[:, 0]    # changing the shape from 2D to 1D for pandas
 
-                encoded_cols = pd.get_dummies(self.dataset[column], prefix=column, dtype=int)
-
-                self.dataset = pd.concat([self.dataset, encoded_cols], axis=1)
-                self.dataset = self.dataset.drop(columns=[column])
+            self.scalers[column] = scaler
 
         return self.dataset

@@ -1,16 +1,20 @@
-import pandas as pd
+from atlas.data.dataset_loader import DatasetLoader
 from atlas.data.preprocessor import Preprocessor
 
-df = pd.DataFrame({
-    "name": ["Samaya", "Swastika", "Aaron", "Sri"],
-    "city": ["London", "Paris", "Tokyo", "London"]
+loader = DatasetLoader()
+loader.load("datasets/sample.csv")
+preprocessor = Preprocessor(loader.dataset)
+
+
+preprocessor.handle_missing_values({
+    "age" : "median",
+    "income" : "median"
 })
 
-preprocessor = Preprocessor(df)
-
-result = preprocessor.encode_categorical({
-    "city" : "one_hot"
+result = preprocessor.scale_numerical({
+    "age" : "standardize",
+    "income" : "normalize"
 })
 
-print(result)
-print(preprocessor.label_mapping)
+print(result[["age", "income"]])
+print(preprocessor.scalers)

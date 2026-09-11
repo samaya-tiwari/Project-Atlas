@@ -1,9 +1,17 @@
-name,age,grade,hours_studied
-Sam,20,85,5
-Alex,22,90,7
-John,19,78,3
-Emily,21,88,6
-Mike,23,95,9
-Alex,21,85
-Jordan,19,92
-Sam, 20, 85, 5
+student_id,name,age,gpa,hours_studied,major,city,is_international,enrollment_date,graduation_year,income,score
+1001,Alice,20,3.8,12,Computer Science,Hattiesburg,True,2024-08-20,2028,45000,85
+1002,Bob,21,3.2,8,Business,Jackson,False,2024-08-21,2028,52000,78
+1003,Charlie,,3.5,10,Computer Science,Hattiesburg,True,2024-08-22,2028,48000,82
+1004,Diana,22,,15,Engineering,Gulfport,False,2023-08-20,2027,61000,91
+1005,Ethan,23,2.9,,Business,Jackson,False,2023-08-21,2027,,70
+1006,Fatima,20,3.9,14,Computer Science,,True,2024-08-20,2028,47000,94
+1007,George,24,3.1,6,Engineering,Hattiesburg,False,2022-08-20,2026,58000,
+1008,Hannah,21,3.7,11,Mathematics,Gulfport,True,2024-08-23,2028,50000,88
+1009,Ian,22,3.0,7,Business,Jackson,False,2023-08-19,2027,54000,74
+1010,Julia,20,3.6,13,Computer Science,Hattiesburg,True,2024-08-20,2028,46000,89
+1010,Julia,20,3.6,13,Computer Science,Hattiesburg,True,2024-08-20,2028,46000,89
+1011,Kevin,25,2.8,5,History,Jackson,False,2021-08-20,2025,43000,68
+1012,Lina,21,3.4,9,Mathematics,Gulfport,True,2024-08-24,2028,51000,81
+1013,Maria,,3.3,10,Engineering,Hattiesburg,True,2024-08-25,2028,56000,84
+1014,Noah,22,3.2,,Business,,False,2023-08-20,2027,53000,76
+1015,Olivia,23,,12,Computer Science,Hattiesburg,False,2022-08-21,2026,,90
