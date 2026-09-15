@@ -14,4 +14,4 @@ student_id,name,age,gpa,hours_studied,major,city,is_international,enrollment_dat
 1012,Lina,21,3.4,9,Mathematics,Gulfport,True,2024-08-24,2028,51000,81
 1013,Maria,,3.3,10,Engineering,Hattiesburg,True,2024-08-25,2028,56000,84
 1014,Noah,22,3.2,,Business,,False,2023-08-20,2027,53000,76
-1015,Olivia,23,,12,Computer Science,Hattiesburg,False,2022-08-21,2026,,90
+1015,Olivia,23,,12,Computer Science,Hattiesburg,False,2022-08-21,2026,,90 

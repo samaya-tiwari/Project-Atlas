@@ -166,3 +166,24 @@ class Preprocessor:
             self.scalers[column] = scaler
 
         return self.dataset
+
+
+    def prepare_datetime(self, columns):
+
+        # check dataset exists
+        if self.dataset is None or self.dataset.empty:
+            return {}
+
+        # the user should pass a list
+        if not isinstance(columns, list):
+            raise TypeError("columns must be a list.")
+
+        for column in columns:
+            try:
+                self.dataset[column] = pd.to_datetime(self.dataset[column], format="mixed", errors="raise")
+            except (ValueError, TypeError) as error:
+                raise ValueError(
+                    f"Column '{column}' contains values that could not be converted to datetime."
+                ) from error
+
+        return self.dataset
