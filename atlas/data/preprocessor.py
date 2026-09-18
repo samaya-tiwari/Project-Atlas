@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 class Preprocessor:
@@ -118,6 +120,7 @@ class Preprocessor:
 
 
     def scale_numerical(self, strategies):
+        """Scales the numerical data (using Standardization and Normalization) of the dataset."""
 
         # check
         if self.dataset is None or self.dataset.empty:
@@ -169,6 +172,7 @@ class Preprocessor:
 
 
     def prepare_datetime(self, columns):
+        """Converts or changes the given dates in different format to a standard form of datatime dtype."""
 
         # check dataset exists
         if self.dataset is None or self.dataset.empty:
@@ -185,5 +189,83 @@ class Preprocessor:
                 raise ValueError(
                     f"Column '{column}' contains values that could not be converted to datetime."
                 ) from error
+
+        return self.dataset
+
+
+    def clean_inconsistent_data(self, strip_whitespace=True, normalize_case=None, replacements=None, numeric_rules=None):
+        """Handles few concrete inconsistencies that are common and safe to automate."""
+        """(like whitespaces, inconsistent capitalization, custom value replacements and more...)"""
+
+        # checking for dataset
+        if self.dataset is None or self.dataset.empty:
+            return {}
+
+        # strip whitespace & normalize case
+        if strip_whitespace or normalize_case:
+
+            valid_cases = {None, "lower", "upper", "title"}
+
+            if normalize_case not in valid_cases:
+                return ValueError(
+                    "normalize_case must be one of: None, 'lower', 'upper', 'title'."
+                )
+            
+            for column in self.dataset.columns:
+                if pd.api.types.is_object_dtype(self.dataset[column]):
+
+                    # ensuring NaN is preserved
+                    series = self.dataset[column].astype("string")
+
+                    if strip_whitespace:
+                        self.dataset[column] = self.dataset[column].str.strip()
+
+                    if normalize_case == "lower":
+                        self.dataset[column] = self.dataset[column].str.lower()
+
+                    elif normalize_case == "upper":
+                        self.dataset[column] = self.dataset[column].str.upper()  
+
+                    elif normalize_case == "title":
+                        self.dataset[column] = self.dataset[column].str.title()
+ 
+
+        # 2. Explicit User Replacements
+        if replacements:
+
+            # validation
+            if replacements is not None and not isinstance(replacements, dict):
+                raise TypeError("replacements must be a dictionary.")
+
+            for column, mapping in replacements.items():
+                if column not in self.dataset.columns:
+                    raise ValueError(f"Replacement column '{column}' does not exist.")
+                
+                # Using .replace() instead of .map() to keep unmapped entries intact
+                self.dataset[column] = self.dataset[column].replace(mapping)
+
+        # --- Phase 2: Numeric Boundary Validation ---
+        if numeric_rules:
+
+            # validation
+            if numeric_rules is not None and not isinstance(numeric_rules, dict):
+                raise TypeError("numeric_rules must be a dictionary.")
+
+            for column, rules in numeric_rules.items():
+                if column not in self.dataset.columns:
+                    raise ValueError(f"Numeric validation column '{column}' does not exist.")
+                
+                if not pd.api.types.is_numeric_dtype(self.dataset[column]):
+                    raise TypeError(f"Cannot apply numeric rules to non-numeric column '{column}'.")
+                
+                # Extract constraints
+                min_val = rules.get("min")
+                max_val = rules.get("max")
+                
+                # Apply rules by converting out-of-bounds metrics to NaN
+                if min_val is not None:
+                    self.dataset.loc[self.dataset[column] < min_val, column] = np.nan
+                if max_val is not None:
+                    self.dataset.loc[self.dataset[column] > max_val, column] = np.nan
 
         return self.dataset
