@@ -1,65 +1,58 @@
-import pandas as pd
-
+from atlas.data.dataset_loader import DatasetLoader
 from atlas.data.preprocessor import Preprocessor
 
-df = pd.DataFrame({
-    "city": [
-        " London ",
-        "london",
-        "LONDON ",
-        "?",
-        " Paris "
-    ],
-    "status": [
-        "ACTIVE",
-        "active",
-        " Active ",
-        "unknown",
-        "INACTIVE"
-    ],
-    "age": [
-        21,
-        -5,
-        150,
-        24,
-        30
-    ],
-    "score": [
-        88,
-        92,
-        -10,
-        105,
-        76
-    ]
-})
 
-preprocessor = Preprocessor(df)
+loader = DatasetLoader()
+loader.load("datasets/sample.csv")
 
-result = preprocessor.clean_inconsistent_data(
-    strip_whitespace=None,
-    normalize_case="lower",
-    replacements={
-        "city": {
-            "?": "unknown"
-        },
-        "status": {
-            "unknown": "inactive"
+preprocessor = Preprocessor(loader.dataset)
+
+
+config = {
+    "inconsistent_data": {
+        "strip_whitespace": True,
+        "normalize_case": "lower",
+        "replacements": None,
+        "numeric_rules": {
+            "age": {
+                "min": 0,
+                "max": 120
+            }
         }
     },
 
-    numeric_rules={
-        "age": {
-            "min": 0,
-            "max": 120
+    "datetime": {
+        "columns": ["enrollment_date"]
+    },
+
+    "missing_values": {
+        "strategies": {
+            "age": "median",
+            "income": "median",
+            "city": "mode"
         },
-        "score": {
-            "min": 0,
-            "max": 100
+        "max_drop_percentage": 20,
+        "constant_values": None
+    },
+
+    "remove_duplicates": True,
+
+    "categorical_encoding": {
+        "strategies": {
+            "major": "one_hot",
+            "city": "one_hot"
+        }
+    },
+
+    "numerical_scaling": {
+        "strategies": {
+            "age": "standardize",
+            "income": "normalize"
         }
     }
-)
+}
 
-print(df)
 
-print("CLEANED DATA:")
+result = preprocessor.preprocess(config)
+
 print(result)

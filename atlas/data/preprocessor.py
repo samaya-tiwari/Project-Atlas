@@ -118,6 +118,63 @@ class Preprocessor:
 
         return self.dataset
 
+    def encode_categorical(self, strategies):
+        """Encodes columns using specified categorical encoding strategies."""
+
+        # check
+        if self.dataset is None or self.dataset.empty:
+            return {}
+
+        if not isinstance(strategies, dict):
+            raise TypeError("strategies must be a dictionary.")
+
+        # validation loop
+        for column, strategy in strategies.items():
+
+            # validate if the column exists
+            if column not in self.dataset.columns:
+                raise ValueError(f"Column '{column}' does not exist in the dataset.")
+
+            # check if the strategy is supported
+            if strategy not in self.CATEGORICAL_ENCODING_STRATEGIES:
+                raise ValueError(
+                    f"The strategy '{strategy}' is not supported for column '{column}'. "
+                    f"Supported strategies are: label, one_hot"
+                )
+
+            # checking if the column is categorical
+            if pd.api.types.is_numeric_dtype(self.dataset[column]):
+                raise ValueError(
+                    f"Cannot perform '{strategy}' strategy to column '{column}' because it is numerical. "
+                    f"The given column data type is {self.dataset[column].dtype}."
+                )
+
+        # encoding
+        for column, strategy in strategies.items():
+
+            if strategy == "label":
+                categories = self.dataset[column].astype("category").cat.categories
+
+                mapping = {
+                    category: code
+                    for code, category in enumerate(categories)
+                }
+
+                self.label_mapping[column] = mapping
+                self.dataset[column] = self.dataset[column].map(mapping)
+
+            elif strategy == "one_hot":
+                encoded_cols = pd.get_dummies(
+                    self.dataset[column],
+                    prefix=column,
+                    dtype=int
+                )
+
+                self.dataset = pd.concat([self.dataset, encoded_cols], axis=1)
+                self.dataset = self.dataset.drop(columns=[column])
+
+        return self.dataset
+
 
     def scale_numerical(self, strategies):
         """Scales the numerical data (using Standardization and Normalization) of the dataset."""
@@ -194,6 +251,7 @@ class Preprocessor:
 
 
     def clean_inconsistent_data(self, strip_whitespace=True, normalize_case=None, replacements=None, numeric_rules=None):
+
         """Handles few concrete inconsistencies that are common and safe to automate."""
         """(like whitespaces, inconsistent capitalization, custom value replacements and more...)"""
 
@@ -267,5 +325,56 @@ class Preprocessor:
                     self.dataset.loc[self.dataset[column] < min_val, column] = np.nan
                 if max_val is not None:
                     self.dataset.loc[self.dataset[column] > max_val, column] = np.nan
+
+        return self.dataset
+
+    def preprocess(self, config):
+        if self.dataset is None or self.dataset.empty:
+            return {}
+
+        if not isinstance(config, dict):
+            raise TypeError("config must be a dictionary. ")
+
+        # basic orchestration pattern
+        # 1. Clean inconsistent data
+        if "inconsistent_data" in config:
+            settings = config["inconsistent_data"]
+
+            self.clean_inconsistent_data(
+                strip_whitespace=settings.get("strip_whitespace", True),
+                normalize_case=settings.get("normalize_case"),
+                numeric_rules=settings.get("numeric_rules"),
+                replacements=settings.get("replacements"),
+            )
+
+        # 2. Prepare datetime columns
+        if "datetime" in config:
+            settings = config["datetime"]
+
+            self.prepare_datetime(
+                settings.get("columns", [])
+            )
+
+        # 3. Handle missing values
+        if "missing_values" in config:
+            settings = config["missing_values"]
+
+            self.handle_missing_values(
+                strategies=settings.get("strategies", {}),
+                max_drop_percentage=settings.get("max_drop_percentage", 20),
+                constant_values=settings.get("constant_values")
+            )
+
+        # 4. Remove duplicates
+        if config.get("remove_duplicates", False):
+            self.remove_duplicates()
+
+        # 5. Scale numerical columns
+        if "numerical_scaling" in config:
+            settings = config["numerical_scaling"]
+
+            self.scale_numerical(
+                settings.get("strategies", {})
+            )
 
         return self.dataset
