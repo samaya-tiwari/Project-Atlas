@@ -1,58 +1,23 @@
-from atlas.data.dataset_loader import DatasetLoader
-from atlas.data.preprocessor import Preprocessor
+import pandas as pd
+from atlas.data.feature_engineer import FeatureEngineer
 
+df = pd.DataFrame({
+    "status": [
+        "active",
+        "active",
+        "active",
+        "active",
+        "active",
+        "inactive",
+        "active"
+    ],
+    "age": [20, 21, 22, 23, 24, 25, 26]
+})
 
-loader = DatasetLoader()
-loader.load("datasets/sample.csv")
+feature_engineer = FeatureEngineer(df)
 
-preprocessor = Preprocessor(loader.dataset)
-
-
-config = {
-    "inconsistent_data": {
-        "strip_whitespace": True,
-        "normalize_case": "lower",
-        "replacements": None,
-        "numeric_rules": {
-            "age": {
-                "min": 0,
-                "max": 120
-            }
-        }
-    },
-
-    "datetime": {
-        "columns": ["enrollment_date"]
-    },
-
-    "missing_values": {
-        "strategies": {
-            "age": "median",
-            "income": "median",
-            "city": "mode"
-        },
-        "max_drop_percentage": 20,
-        "constant_values": None
-    },
-
-    "remove_duplicates": True,
-
-    "categorical_encoding": {
-        "strategies": {
-            "major": "one_hot",
-            "city": "one_hot"
-        }
-    },
-
-    "numerical_scaling": {
-        "strategies": {
-            "age": "standardize",
-            "income": "normalize"
-        }
-    }
-}
-
-
-result = preprocessor.preprocess(config)
+result = feature_engineer.detect_near_constant_feature(
+    threshold=0.80
+)
 
 print(result)
