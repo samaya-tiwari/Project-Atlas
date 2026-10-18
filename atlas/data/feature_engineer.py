@@ -1,5 +1,6 @@
 import pandas as pd
 from itertools import combinations
+import re
 
 class FeatureEngineer:
     """Creates, evaluates, and selects useful dataset features."""
@@ -92,7 +93,7 @@ class FeatureEngineer:
 
             correlation = correlation_matrix.loc[feature_1, feature_2]
 
-            if pd.isna(correlation):  
+            if pd.isna(correlation):     # handles constant numeric columns where correlation may be NaN
                 continue
 
             if abs(correlation) >= threshold:       # both strong +ve and -ve relationships are detected
@@ -103,3 +104,87 @@ class FeatureEngineer:
                 })
 
         return high_correlation_pairs
+
+    def detect_identifier_features(self, uniqueness_threshold=0.95):
+        """Detects identifier-like features and potentially redundant identifiers."""
+
+        if self.dataset is None or self.dataset.empty:
+            return {}
+
+        if not 0 < uniqueness_threshold <= 1:
+            raise ValueError(
+                "uniqueness_threshold must be between 0 and 1."
+            )
+
+        identifier_features = {}
+
+        id_name_patterns = {
+            "id",
+            "student_id",
+            "customer_id",
+            "user_id",
+            "uuid",
+            "guid"
+        }
+
+        uuid_pattern = re.compile(
+            r"^[0-9a-fA-F]{8}-"
+            r"[0-9a-fA-F]{4}-"
+            r"[0-9a-fA-F]{4}-"
+            r"[0-9a-fA-F]{4}-"
+            r"[0-9a-fA-F]{12}$"
+        )
+
+        for column in self.dataset.columns:
+            non_missing = self.dataset[column].dropna()
+
+            if non_missing.empty:
+                continue
+
+            unique_ratio = (
+                non_missing.nunique() / len(non_missing)
+            )
+
+            column_name = column.lower()
+
+            name_suggest_id = (
+                column_name in id_name_patterns or column_name.endswith("_id")
+            )
+
+            uuid_like = False
+
+            if pd.api.types.is_object_dtype(non_missing):
+                string_values = non_missing.astype(str)
+
+                uuid_matches = string_values.apply(
+                    lambda value: bool(uuid_pattern.match(value))
+                )
+
+                uuid_like = uuid_matches.mean() >= uniqueness_threshold
+
+            if unique_ratio >= uniqueness_threshold and (name_suggest_id or uuid_like):
+                reasons = []
+
+                if name_suggest_id:
+                    reasons.append("identifier-like column name")
+
+                if uuid_like:
+                    reasons.append("UUID-like values")
+
+                reasons.append("high uniqueness")
+
+                identifier_features[column] = {
+                    "unique_ratio": round(float(unique_ratio), 4),
+                    "reasons": reasons
+                }
+        potentially_redundant = []
+
+        identifier_columns = list(identifier_features.keys())
+
+        if len(identifier_columns) > 1:
+            potentially_redundant = identifier_columns
+
+        return {
+            "identifier_features": identifier_features,
+            "potentially_redundant_identifier": potentially_redundant
+        }
