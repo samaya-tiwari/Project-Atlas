@@ -1,27 +1,26 @@
 import pandas as pd
+
 from atlas.data.feature_engineer import FeatureEngineer
 
-df = pd.DataFrame({
-    "enrollment_date": pd.to_datetime([
-        "2024-08-20",
-        "2024-08-24",
-        "2025-01-15"
-    ])
-})
 
+df = pd.DataFrame({
+    "student_id": [1001, 1002, 1003],
+    "name": ["Alice", "Bob", "Charlie"],
+    "age": [20, 21, 22],
+    "gpa": [3.8, 3.2, 3.5],
+    "hours_studied": [12, 8, 10]
+})
 
 feature_engineer = FeatureEngineer(df)
 
-result = feature_engineer.create_datetime_features(
-    columns=["enrollment_date"],
-    features=[
-        "year",
-        "month",
-        "day",
-        "dayofweek",
-        "quarter",
-        "is_weekend"
-    ]
-)
+print("BEFORE:")
+print(feature_engineer.dataset)
 
+result = feature_engineer.select_features([
+    "age",
+    "gpa",
+    "fake_col"
+])
+
+print("\nAFTER:")
 print(result)

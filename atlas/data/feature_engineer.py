@@ -270,3 +270,26 @@ class FeatureEngineer:
                     columns=[column]
                 )
         return self.dataset
+
+
+    def select_features(self, columns):
+        """Keeps only the explicitly selected features in the dataset."""
+
+        if self.dataset is None or self.dataset.empty:
+            return {}
+
+        if not isinstance(columns, list):
+            raise TypeError("columns must be a list.")
+
+        if not columns:
+            raise ValueError("columns cannot be empty.")
+
+        for column in columns:
+            if column not in self.dataset.columns:
+                raise ValueError(
+                    f"Column '{column}' does not exist in the dataset."
+                )
+
+        self.dataset = self.dataset[columns].copy()
+
+        return self.dataset
