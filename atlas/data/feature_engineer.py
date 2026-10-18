@@ -2,11 +2,22 @@ import pandas as pd
 from itertools import combinations
 import re
 
+
 class FeatureEngineer:
     """Creates, evaluates, and selects useful dataset features."""
 
     def __init__(self, dataset):
         self.dataset = dataset.copy()
+
+    DATETIME_FEATURES = {
+    "year",
+    "month",
+    "day",
+    "dayofweek",
+    "quarter",
+    "is_weekend"
+}
+
 
     def drop_features(self, columns):
         """Drops explicitly selected features from the dataset."""
@@ -139,7 +150,7 @@ class FeatureEngineer:
             non_missing = self.dataset[column].dropna()
 
             if non_missing.empty:
-                continue
+                continue 
 
             unique_ratio = (
                 non_missing.nunique() / len(non_missing)
@@ -188,3 +199,74 @@ class FeatureEngineer:
             "identifier_features": identifier_features,
             "potentially_redundant_identifier": potentially_redundant
         }
+
+    def create_datetime_features(self, columns, features=None, drop_original=False):
+        """Creates datetime-derived features for any useful insights related to datetime."""
+
+        if self.dataset is None or self.dataset.empty:
+            return {}
+
+        #validate columns
+        if not isinstance(columns, list):
+            raise TypeError("columns must be a list.")
+
+        # if no specific features given, create all supported features
+        if features is None:
+            features = list(self.DATETIME_FEATURES)
+
+        if not isinstance(features, list):
+            raise TypeError("features must be a list.")
+
+        # validating requested features
+        for feature in features:
+            if feature not in self.DATETIME_FEATURES:
+                raise ValueError(
+                    f"Unsupported datetime feature '{feature}'. "
+                    f"Supported features are: {self.DATETIME_FEATURES}"
+                )
+
+        for column in columns:
+
+            # checking if column exists
+            if column not in self.dataset.columns:
+                raise ValueError(
+                    f"Column '{column}' does not exist in the dataset."
+                )
+
+            # checking if the column is datetime
+            if not pd.api.types.is_datetime64_any_dtype(
+                self.dataset[column]
+            ):
+                raise TypeError(
+                    f"Column '{column}' is not a datetime column. "
+                    "Convert it using Preprocessor before creating datetime features."
+                )
+
+            # creating derived features
+            if "year" in features:
+                self.dataset[f"{column}_year"] = (self.dataset[column].dt.year)
+
+            if "month" in features:
+                self.dataset[f"{column}_month"] = (self.dataset[column].dt.month)
+
+            if "day" in features:
+                self.dataset[f"{column}_day"] = (self.dataset[column].dt.day)
+
+            if "dayofweek" in features:
+                self.dataset[f"{column}_dayofweek"] = (self.dataset[column].dt.dayofweek)
+
+            if "quarter" in features:
+                self.dataset[f"{column}_quarter"] = (self.dataset[column].dt.quarter)
+
+            if "is_weekend" in features:
+                self.dataset[f"{column}_is_weekend"] = (
+                    self.dataset[column].dt.dayofweek >= 5
+                ).astype(int)
+
+
+            # optionally removing original datetime col
+            if drop_original:
+                self.dataset = self.dataset.drop(
+                    columns=[column]
+                )
+        return self.dataset
