@@ -1,3 +1,6 @@
+import pandas as pd
+from itertools import combinations
+
 class FeatureEngineer:
     """Creates, evaluates, and selects useful dataset features."""
 
@@ -66,3 +69,37 @@ class FeatureEngineer:
                 }
 
             return near_const_features
+
+    def detect_high_correlation_features(self, threshold= 0.90):
+        """Detects pairs of numerical features with high absolute correlation."""
+
+        if self.dataset is None or self.dataset.empty:
+            return []
+
+        if not 0 < threshold <= 1:
+            raise ValueError("threshold must be between 0 and 1.")
+
+        numeric_data = self.dataset.select_dtypes(include=["number"])
+
+        if numeric_data.shape[1] < 2:
+            return []
+
+        correlation_matrix = numeric_data.corr()
+
+        high_correlation_pairs = []
+
+        for feature_1, feature_2 in combinations(numeric_data.columns, 2):    # checks two features once only
+
+            correlation = correlation_matrix.loc[feature_1, feature_2]
+
+            if pd.isna(correlation):  
+                continue
+
+            if abs(correlation) >= threshold:       # both strong +ve and -ve relationships are detected
+                high_correlation_pairs.append({
+                    "feature_1": feature_1,
+                    "feature_2": feature_2,
+                    "correlation": round(float(correlation), 4)
+                })
+
+        return high_correlation_pairs
