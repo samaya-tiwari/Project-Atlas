@@ -66,7 +66,10 @@ class FeatureEngineer:
         near_const_features = {}
 
         for column in self.dataset.columns:
-            val_proportions = self.dataset[column].value_counts(normalize=True, dropna=True)
+            val_proportions = self.dataset[column].value_counts(
+                normalize=True, 
+                dropna=True
+            )
 
             if val_proportions.empty:
                 continue
@@ -76,11 +79,11 @@ class FeatureEngineer:
 
             if dominant_proportion >= threshold:
                 near_const_features[column] = {
-                    "dominant_values" : dominant_value,
+                    "dominant_value" : dominant_value,
                     "proportion" : round(float(dominant_proportion), 4)
                 }
 
-            return near_const_features
+        return near_const_features
 
     def detect_high_correlation_features(self, threshold= 0.90):
         """Detects pairs of numerical features with high absolute correlation."""
@@ -197,7 +200,7 @@ class FeatureEngineer:
 
         return {
             "identifier_features": identifier_features,
-            "potentially_redundant_identifier": potentially_redundant
+            "potentially_redundant_identifiers": potentially_redundant
         }
 
     def create_datetime_features(self, columns, features=None, drop_original=False):
@@ -293,3 +296,36 @@ class FeatureEngineer:
         self.dataset = self.dataset[columns].copy()
 
         return self.dataset
+
+
+    def get_drop_candidates(
+            self,
+            near_constant_threshold = 0.95,
+            correlation_threshold = 0.90,
+            identifier_uniqueness_threshold = 0.95
+    ):
+        """Collects features that may be unnecessary or redundant."""
+
+        if self.dataset is None or self.dataset.empty:
+            return {}
+
+        constant_features = self.detect_constant_features()
+
+        near_const_features = self.detect_near_constant_feature(
+            threshold=near_constant_threshold
+        )
+
+        identifier_features = self.detect_identifier_features(
+            uniqueness_threshold=identifier_uniqueness_threshold
+        )
+
+        high_correlation_pairs = self.detect_high_correlation_features(
+            threshold=correlation_threshold
+        )
+
+        return {
+            "constant_features": constant_features,
+            "near_constant_features": near_const_features,
+            "identifier_features": identifier_features,
+            "high_correlation_pairs": high_correlation_pairs
+        }
