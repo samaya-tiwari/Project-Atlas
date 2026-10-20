@@ -8,6 +8,7 @@ class FeatureEngineer:
 
     def __init__(self, dataset):
         self.dataset = dataset.copy()
+        self.feature_report = {}
 
     DATETIME_FEATURES = {
     "year",
@@ -329,3 +330,46 @@ class FeatureEngineer:
             "identifier_features": identifier_features,
             "high_correlation_pairs": high_correlation_pairs
         }
+
+    def engineer_features(self, config):
+        """Coordinates feature engineering and feature selection operations."""
+
+        if self.dataset is None is self.dataset.empty:
+            return {}
+
+        if not isinstance(config, dict):
+            raise TypeError("config must be a dictionary.")
+
+        # 1 - Create datetime-derived features
+        if "datetime_features" in config:
+            settings = config["datetime_features"]
+
+            self.create_datetime_features(
+                columns = settings.get("columns", []),
+                features=settings.get("features"),
+                drop_original=settings.get("drop_original", False)
+            )
+
+        # 2 - Explicitly drop unwanted features
+        if "drop_features" in config:
+            self.drop_features(
+                config["drop_features"]
+            )
+
+        # 3 - Explicit feature selection
+        if "select_features" in config:
+            self.select_features(
+                config["select_features"]
+            )
+
+        # 4 - Analyze possible drop candidate
+        if "analyze_drop_candidates" in config:
+            settings = config["analyze_drop_candidates"]
+
+            self.feature_report = self.get_drop_candidates(
+                near_constant_threshold=settings.get("near_constant_threshold", 0.95),
+                correlation_threshold=settings.get("correlatoin_threshold", 0.90),
+                identifier_uniqueness_threshold=settings.get("identifier_uniqueness_threshold", 0.95)
+            )
+
+        return self.dataset
