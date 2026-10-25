@@ -76,4 +76,90 @@ class ModelRecommender:
                 "target": self.target,
                 "num_classes": None
             }
-        
+
+    def recommend_models(self):
+        problem_info = self.detect_problem_type()
+
+        task_type = problem_info["task_type"]
+        subtype = problem_info["subtype"]
+
+        recommendations = []
+
+        if task_type == "classification" and subtype == "binary":
+            recommendations = [
+                {
+                    "model": "logistic_regression",
+                    "reason": "Strong and interpretable baseline for binary classification."
+                },
+                {
+                    "model": "decision_tree",
+                    "reason": "Can capture non-linear relationships and is easy to interpret."
+                },
+                {
+                    "model": "random_forest",
+                    "reason": "Handles nonlinear patterns and features interactions well."
+                },
+                {
+                    "model": "knn",
+                    "reason": "Useful when similar observations tend to belong to the same class."
+                },
+                {
+                    "model": "svc",
+                    "reason": "Can perform well on classification problems with properly scaled features."
+                }
+            ]
+
+        elif task_type == "classification" and subtype == "multiclass":
+            recommendations = [
+                {
+                    "model": "logistic_regression",
+                    "reason": "Can handle multiclass classification using strategies such as multinomial classification."
+                },
+                {
+                    "model": "decision_tree",
+                    "reason": "Can naturally separate data into multiple classes using decision rules."
+                },
+                {
+                    "model": "random_forest",
+                    "reason": "Combines multiple decision trees and performs well on many multiclass tabular datasets."
+                },
+                {
+                    "model": "knn",
+                    "reason": "Can classify observations into multiple classes based on nearby training examples."
+                },
+                {
+                    "model": "svc",
+                    "reason": "Can support multiclass classification by combining multiple binary classification decisions."
+                }
+            ]
+
+        elif task_type == "regression":
+            recommendations = [
+                {
+                    "model": "linear_regression",
+                    "reason": "Provides a simple and interpretable baseline for continuous targets."
+                },
+                {
+                    "model": "decision_tree_regressor",
+                    "reason": "Can capture nonlinear relationships without requiring feature scaling."
+                },
+                {
+                    "model": "random_forest_regressor",
+                    "reason": "Handles nonlinear patterns and feature interactions well on tabular data."
+                },
+                {
+                    "model": "knn_regressor",
+                    "reason": "Useful when observations with similar features tend to have similar target values."
+                },
+                {
+                    "model": "svr",
+                    "reason": "Can model complex relationships, especially when numerical features are properly scaled."
+                }
+            ]
+
+        return {
+            "task_type": task_type,
+            "subtype": subtype,
+            "target": self.target,
+            "recommended_models": recommendations
+        }
