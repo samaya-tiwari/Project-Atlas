@@ -62,8 +62,8 @@ class ModelRecommender:
         # Numeric target with a small num of discrete classes
         elif is_integer_like and unique_count <= 20:
             return{
-                "target_type": "classification",
-                "subclass": "multiclass",
+                "task_type": "classification",
+                "subtype": "multiclass",
                 "target": self.target,
                 "num_classes": unique_count
             }
@@ -71,8 +71,8 @@ class ModelRecommender:
         # Otherwise assume a continuous numeric target
         else:
             return {
-                "target_type": "regression",
-                "subclass": None,
+                "task_type": "regression",
+                "subtype": None,
                 "target": self.target,
                 "num_classes": None
             }
