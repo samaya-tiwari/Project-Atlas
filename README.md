@@ -19,9 +19,9 @@ EDA Engine              ✅
    ↓
 Preprocessing Engine    ✅
    ↓
-Feature Engineering     🚧
+Feature Engineering     ✅
    ↓
-Model Recommendation    ⏳
+Model Recommendation    🚧
    ↓
 Model Training          ⏳
    ↓
