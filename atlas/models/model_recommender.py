@@ -5,16 +5,25 @@ class ModelRecommender:
 
     def __init__(self, dataset, target=None):
         self.dataset = dataset.copy()
-        self.target = target
+        self.target = None
+
+        if target is not None:
+            self.set_target(target)
 
     def detect_problem_type(self):
 
         if self.dataset is None or self.dataset.empty:
             return {}
 
+        if self.target is None:
+            raise ValueError(
+                "No target column has been selected. "
+                "Provide a target or self_target() first."
+            )
+
         # check if the target column exists
         if self.target not in self.dataset.columns:
-            raise ValueError({f"Target column '{self.target}' doesn't exist in the dataset."})
+            raise ValueError(f"Target column '{self.target}' doesn't exist in the dataset.")
 
         target_data = self.dataset[self.target]
 
@@ -195,7 +204,7 @@ class ModelRecommender:
             non_missing_count = column_data.notna().sum()
 
             # skip useless columns
-            if unique_count < 1:
+            if unique_count <= 1:
                 continue
 
             if non_missing_count == 0:
@@ -217,7 +226,7 @@ class ModelRecommender:
             # Identifier case
             if (column_name == "id" or column_name.endswith("_id") or "uuid" in column_name or "guid" in column_name):
                 score -= 5
-                reasons.append("Column appears to be an indentifier.")
+                reasons.append("Column appears to be an identifier.")
 
             # Classification-like target
             if 2<=unique_count<=20 and unique_ratio <= 0.5:
@@ -272,6 +281,12 @@ class ModelRecommender:
     def analyze_dataset(self):
         """This analyzes the dataset and returns useful characteristics."""
 
+        if self.target is None:
+            raise ValueError(
+                "No target column has been selected. "
+                "Provide a target or call set_target() first."
+            )
+
         # drop the target column from the dataset to analyze
         features = self.dataset.drop(columns=[self.target])
 
@@ -305,4 +320,31 @@ class ModelRecommender:
             "num_numeric_features": num_numeric_features,
             "num_categorical_features": num_categorical_features,
             "dataset_size": dataset_size
+        }
+
+    def set_target(self, target):
+        """Validates and sets the target column."""
+
+        if not isinstance(target, str):
+            raise TypeError("Target must be a column name as a string.")
+
+        if target not in self.dataset.columns:
+            raise ValueError(
+                f"Target column '{target}' does not exist in the dataset."
+            )
+
+        target_data = self.dataset[target]
+
+        unique_count = target_data.nunique()
+
+        if unique_count <= 1:
+            raise ValueError(
+                f"Target column '{target}' must contain at least two unique values."
+            )
+
+        self.target = target
+
+        return {
+            "target": self.target,
+            "unique_count": unique_count
         }
