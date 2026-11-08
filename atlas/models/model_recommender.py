@@ -94,8 +94,10 @@ class ModelRecommender:
         subtype = problem_info["subtype"]
 
         dataset_size = dataset_info["dataset_size"]
-        
         feature_size = dataset_info["feature_size"]
+
+        num_numeric_features = dataset_info["num_numeric_features"]
+        num_categorical_features = dataset_info["num_categorical_features"]
 
         recommendations = []
 
@@ -186,6 +188,13 @@ class ModelRecommender:
                 }
             ]
 
+        if num_numeric_features > num_categorical_features:
+            feature_type = "mostly_numeric"
+        elif num_categorical_features > num_numeric_features:
+            feature_type = "mostly_categorical"
+        else:
+            feature_type = "mixed"
+
         # Adjusting model scores based on dataset charactersitics
         for recommendation in recommendations:
             model = recommendation["model"]
@@ -238,6 +247,33 @@ class ModelRecommender:
                     recommendation["score"] += 1
                     recommendation["adjustments"].append(
                         "Linear models can work well with higher-dimensional datasets."
+                    )
+
+            # Feature type adjustments
+            if feature_type == "mostly_numeric":
+                if model in {
+                    "logistic_regression",
+                    "linear_regression",
+                    "knn",
+                    "knn_regressor",
+                    "svc",
+                    "svr"
+                }:
+                    recommendation["score"] += 1
+                    recommendation["adjustments"].append(
+                        "The dataset is mostly numeric, which suits this model well."
+                    )
+
+            elif feature_type == "mostly_categorical":
+                if model in {
+                    "decision_tree",
+                    "decision_tree_regressor",
+                    "random_forest",
+                    "random_forest_regressor"
+                }:
+                    recommendation["score"] += 1
+                    recommendation["adjustments"].append(
+                        "Tree-based models can work well with encoded categorical features."
                     )
 
             # keeping score within a clean 1-10 range
