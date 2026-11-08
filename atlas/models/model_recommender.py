@@ -88,9 +88,14 @@ class ModelRecommender:
 
     def recommend_models(self):
         problem_info = self.detect_problem_type()
+        dataset_info = self.analyze_dataset()
 
         task_type = problem_info["task_type"]
         subtype = problem_info["subtype"]
+
+        dataset_size = dataset_info["dataset_size"]
+        
+        feature_size = dataset_info["feature_size"]
 
         recommendations = []
 
@@ -98,22 +103,27 @@ class ModelRecommender:
             recommendations = [
                 {
                     "model": "logistic_regression",
+                    "score": 8,
                     "reason": "Strong and interpretable baseline for binary classification."
                 },
                 {
                     "model": "decision_tree",
+                    "score": 6,
                     "reason": "Can capture non-linear relationships and is easy to interpret."
                 },
                 {
                     "model": "random_forest",
-                    "reason": "Handles nonlinear patterns and features interactions well."
+                    "score": 8,
+                    "reason": "Handles nonlinear patterns and feature interactions well."
                 },
                 {
                     "model": "knn",
+                    "score": 7,
                     "reason": "Useful when similar observations tend to belong to the same class."
                 },
                 {
                     "model": "svc",
+                    "score": 7,
                     "reason": "Can perform well on classification problems with properly scaled features."
                 }
             ]
@@ -122,22 +132,27 @@ class ModelRecommender:
             recommendations = [
                 {
                     "model": "logistic_regression",
+                    "score": 7,
                     "reason": "Can handle multiclass classification using strategies such as multinomial classification."
                 },
                 {
                     "model": "decision_tree",
+                    "score": 6,
                     "reason": "Can naturally separate data into multiple classes using decision rules."
                 },
                 {
                     "model": "random_forest",
+                    "score": 8,
                     "reason": "Combines multiple decision trees and performs well on many multiclass tabular datasets."
                 },
                 {
                     "model": "knn",
+                    "score": 7,
                     "reason": "Can classify observations into multiple classes based on nearby training examples."
                 },
                 {
                     "model": "svc",
+                    "score": 7,
                     "reason": "Can support multiclass classification by combining multiple binary classification decisions."
                 }
             ]
@@ -146,25 +161,92 @@ class ModelRecommender:
             recommendations = [
                 {
                     "model": "linear_regression",
+                    "score": 7,
                     "reason": "Provides a simple and interpretable baseline for continuous targets."
                 },
                 {
                     "model": "decision_tree_regressor",
+                    "score": 6,
                     "reason": "Can capture nonlinear relationships without requiring feature scaling."
                 },
                 {
                     "model": "random_forest_regressor",
+                    "score": 8,
                     "reason": "Handles nonlinear patterns and feature interactions well on tabular data."
                 },
                 {
                     "model": "knn_regressor",
+                    "score": 6,
                     "reason": "Useful when observations with similar features tend to have similar target values."
                 },
                 {
                     "model": "svr",
+                    "score": 7,
                     "reason": "Can model complex relationships, especially when numerical features are properly scaled."
                 }
             ]
+
+        # Adjusting model scores based on dataset charactersitics
+        for recommendation in recommendations:
+            model = recommendation["model"]
+            recommendation["adjustments"] = []
+
+            # dataset size adjustments
+            if dataset_size == "small":
+
+                if model in {"knn", "knn_regressor"}:
+                    recommendation["score"] += 1
+                    recommendation["adjustments"].append(
+                        "Small datasets are suitable for neighbor-based models."
+                    )
+
+                if model in {"svc", "svr"}:
+                    recommendation["score"] += 1
+                    recommendation["adjustments"].append(
+                        "Support vector models can perform well on smaller datasets."
+                    )
+
+            elif dataset_size == "large":
+
+                if model in {"knn", "knn_regressor"}:
+                    recommendation["score"] -= 2
+                    recommendation["adjustments"].append(
+                        "KNN can become expensive on large datasets."
+                    )
+
+                if model in {"svc", "svr"}:
+                    recommendation["score"] -= 2
+                    recommendation["adjustments"].append(
+                        "Support vector models can become computationally expensive on large datasets."
+                    )
+
+                if model in {"logistic_regression", "linear_regression"}:
+                    recommendation["score"] += 1
+                    recommendation["adjustments"].append(
+                        "Linear models generally scale well to larger datasets."
+                    )
+
+            # Feature size adjustments
+            if feature_size == "high":
+                if model in {"knn", "knn_regressor"}:
+                    recommendation["score"] -= 2
+                    recommendation["adjustments"].append(
+                        "KNN can struggle when the dataset has many features."
+                    )
+
+                if model in {"logistic_regression", "linear_regression"}:
+                    recommendation["score"] += 1
+                    recommendation["adjustments"].append(
+                        "Linear models can work well with higher-dimensional datasets."
+                    )
+
+            # keeping score within a clean 1-10 range
+            recommendation["score"] = max(1, min(10, recommendation["score"]))
+
+        recommendations.sort(
+            key=lambda model: model["score"],
+            reverse=True
+        )
 
         return {
             "task_type": task_type,
@@ -314,12 +396,21 @@ class ModelRecommender:
         else:
             dataset_size = "large"
 
+        # determine feature size
+        if num_features < 10:
+            feature_size = "low"
+        elif num_features <= 50:
+            feature_size = "medium"
+        else:
+            feature_size = "high"
+
         return{
             "num_rows": num_rows,
             "num_features": num_features,
             "num_numeric_features": num_numeric_features,
             "num_categorical_features": num_categorical_features,
-            "dataset_size": dataset_size
+            "dataset_size": dataset_size,
+            "feature_size": feature_size
         }
 
     def set_target(self, target):
