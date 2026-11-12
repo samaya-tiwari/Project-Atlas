@@ -21,9 +21,9 @@ Preprocessing Engine    ✅
    ↓
 Feature Engineering     ✅
    ↓
-Model Recommendation    🚧
+Model Recommendation    ✅
    ↓
-Model Training          ⏳
+Model Training          🚧
    ↓
 Evaluation              ⏳
    ↓
