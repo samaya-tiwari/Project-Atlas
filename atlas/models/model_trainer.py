@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+from sklearn.model_selection import train_test_split
+
 class ModelTrainer:
     """Prepares datasets and trains ML models"""
     def __init__(self, dataset, target=None):
@@ -18,6 +20,11 @@ class ModelTrainer:
 
         self.feature_names = []
         self.target_info = {}
+
+        self.X_train = None
+        self.y_train = None
+        self.X_test = None
+        self.y_test = None
 
         if target is not None:
             self.set_target(target)
@@ -147,3 +154,43 @@ class ModelTrainer:
         self.feature_names = X.columns.tolist()
 
         return self.X, self.y
+
+    def split_data(self, test_size = 0.20, random_state=42, stratify=False):
+        """Splits the prepared features and target into training and testing sets."""
+
+        if self.X is None or self.y is None:
+            raise ValueError(
+                "Training data has not been prepared. "
+                "Call perpare_features_target() first."
+            )
+
+        if not 0 < test_size < 1:
+            raise ValueError(
+                "test_size must be between 0 and 1."
+            )
+
+        stratify_data = None
+
+        if stratify:
+            stratify_data = self.y
+
+        (
+            self.X_train,
+            self.X_test,
+            self.y_train,
+            self.y_test
+        ) = train_test_split(
+            self.X,
+            self.y,
+            test_size=test_size,
+            random_state= random_state,
+            stratify=stratify_data
+        )
+
+        return {
+            "training_rows": len(self.X_train),
+            "testing_rows": len(self.X_test),
+            "test_size": test_size,
+            "random_state": random_state,
+            "stratified": stratify
+        }
